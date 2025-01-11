@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.example.entity.Account;
+import com.example.exception.UsernameAlreadyExistsException;
 import com.example.repository.AccountRepository;
 
 
@@ -20,12 +21,27 @@ public class AccountService
         this.accountRepository = accountRepository;
     }
 
-    public Account persistAccount(Account account)
+    public Account persistAccount(Account account) throws UsernameAlreadyExistsException
     {
-        return accountRepository.save(account);
+        if (account.getPassword().length() >= 4 && !account.getUsername().isBlank())
+        {
+            if (accountRepository.findAccountByUsername(account.getUsername()) == null)
+            {
+                return accountRepository.save(account);
+            }
+            else
+            {
+                throw new UsernameAlreadyExistsException();
+            }
+        }
+        else
+        {
+            return null;
+        }
+        
     }
 
-    public Account getAccountByUsername(Account account)
+    public Account loginAccount(Account account)
     {
         Optional<Account> optionalAccount = accountRepository.findAccountByUsernameAndPassword(
                                             account.getUsername(), account.getPassword());
